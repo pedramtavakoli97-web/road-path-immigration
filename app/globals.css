@@ -1,0 +1,71 @@
+@import url("https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --header-height: 84px;
+  --font-inter: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-playfair: "Playfair Display", "Georgia", serif;
+  --font-farsi: "Vazirmatn", "Tahoma", "Arial", sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #ffffff;
+  color: #2b2b2b;
+}
+
+[dir="rtl"],
+[dir="rtl"] body,
+[dir="rtl"] input,
+[dir="rtl"] textarea,
+[dir="rtl"] select,
+[dir="rtl"] button,
+[dir="rtl"] .font-serif,
+[dir="rtl"] .font-sans {
+  font-family: var(--font-farsi);
+}
+
+[dir="rtl"] [dir="ltr"] {
+  font-family: var(--font-inter);
+}
+
+::selection {
+  background: #8b1e2d;
+  color: #ffffff;
+}
+
+.luxury-border {
+  position: relative;
+}
+
+.luxury-border::before {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.9), rgba(139, 30, 45, 0.08), rgba(212, 175, 55, 0.35));
+  border-radius: inherit;
+  content: "";
+  inset: 0;
+  padding: 1px;
+  pointer-events: none;
+  position: absolute;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.section-pad {
+  @apply px-5 py-16 sm:px-6 lg:px-8 lg:py-24;
+}
+
+.container-lux {
+  @apply mx-auto max-w-7xl;
+}
+
+.focus-ring {
+  @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-burgundy;
+}
