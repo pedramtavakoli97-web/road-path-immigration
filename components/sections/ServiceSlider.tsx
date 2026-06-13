@@ -26,7 +26,7 @@ const services = [
     audience: "Skilled workers with foreign or Canadian work experience, language results and education credentials, plus candidates seeking PNP nominations.",
     details: ["Complete CRS assessment and profile audit", "Identify language, ECA, LMIA, spouse and provincial strategies", "Set up and monitor Express Entry profiles", "Prepare targeted PNP applications", "Prepare ITA-stage document packages and post-submission responses"],
     outcome: "A provincial nomination can add 600 CRS points, or an ITA can lead to PR processing. We assist through final PR decision and post-landing guidance.",
-    cta: "Get a CRS and PNP assessment with a tailored action plan.",
+    cta: "Get a CRS and PNP assessment with a clear action plan.",
     href: "/programs"
   },
   {
@@ -46,7 +46,7 @@ const services = [
     icon: GraduationCap,
     summary: "We help international students, families and institutions with study permits, extensions, PGWP guidance and pathways from study to permanent residence.",
     audience: "Prospective international students enrolling in DLIs, and graduates seeking PGWP and permanent residence pathways.",
-    details: ["Assess program eligibility, DLI status and study plan strength", "Prepare study permit applications with financial proof and acceptance letters", "Advise on co-op, internship and on-campus work eligibility", "Guide PGWP timing and documentation", "Counsel on transition from study to work and PR"],
+    details: ["Assess program eligibility, DLI status and study plan clarity", "Prepare study permit applications with financial proof and acceptance letters", "Advise on co-op, internship and on-campus work eligibility", "Guide PGWP timing and documentation", "Counsel on transition from study to work and PR"],
     outcome: "Approval of study permits and PGWPs where eligible, with guidance toward permanent residency after Canadian work experience.",
     cta: "Start your student pathway with an eligibility review and document checklist.",
     href: "/programs"
@@ -55,7 +55,7 @@ const services = [
     title: "Visitor Visas & Super Visa",
     kicker: "Temporary visits",
     icon: Plane,
-    summary: "We prepare visitor visa and super visa applications by demonstrating temporary intent, financial support and strong ties, while handling invitation letters and supporting documents.",
+    summary: "We prepare visitor visa and super visa applications by demonstrating temporary intent, financial support and documented ties, while handling invitation letters and supporting documents.",
     audience: "Visitors from visa-required countries travelling for tourism, family visits or business, plus parents and grandparents seeking extended stays.",
     details: ["Assess whether TRV, eTA or super visa is appropriate", "Draft invitation letters and financial evidence packages", "Prepare super visa medical insurance documentation", "Submit applications and follow visa office requests"],
     outcome: "Temporary entry authorization for short or extended visits, plus advice on extensions or change of status when circumstances change.",

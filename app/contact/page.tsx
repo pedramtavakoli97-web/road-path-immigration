@@ -6,7 +6,7 @@ import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Contact Road Path Immigration to book a premium Canadian immigration consultation."
+  description: "Contact Road Path Immigration to book a Canadian immigration consultation."
 };
 
 export default function ContactPage() {

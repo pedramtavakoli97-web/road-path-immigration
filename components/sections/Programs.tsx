@@ -1,6 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-import { SectionHeading } from "@/components/SectionHeading";
 import { programs } from "@/lib/site";
 
 const descriptions: Record<string, string> = {
@@ -13,14 +12,23 @@ const descriptions: Record<string, string> = {
   "PR Cards & Appeals": "PR card renewals, travel documents, residency obligation reviews, refusals and appeal strategy."
 };
 
+const slugs: Record<string, string> = {
+  "Family Sponsorship": "family-sponsorship",
+  "Express Entry & PNPs": "express-entry-pnps",
+  "Work Permits": "work-permits",
+  "Study Permits": "study-permits",
+  "Visitor Visas & Super Visa": "visitor-visas-super-visa",
+  "Business Immigration": "business-immigration",
+  "PR Cards & Appeals": "pr-cards-appeals"
+};
+
 export function Programs() {
   return (
     <section className="section-pad bg-white">
       <div className="container-lux">
-        <SectionHeading eyebrow="Immigration Programs" title="Strategic pathways for every stage of your journey" copy="Explore the Canadian immigration options most often used by skilled professionals, families, students, and visitors." />
-        <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {programs.map((program) => (
-            <Link key={program} href="/programs" className="group rounded-lg border border-charcoal/10 bg-white p-7 shadow-sm transition duration-300 hover:border-gold hover:shadow-luxury">
+            <Link id={slugs[program]} key={program} href={`/programs#${slugs[program]}`} className="group scroll-mt-28 rounded-lg border border-charcoal/10 bg-white p-7 shadow-sm transition duration-300 hover:border-gold hover:shadow-luxury">
               <div className="flex items-start justify-between gap-6">
                 <h3 className="font-serif text-2xl text-charcoal">{program}</h3>
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded bg-porcelain text-burgundy transition group-hover:bg-burgundy group-hover:text-white">

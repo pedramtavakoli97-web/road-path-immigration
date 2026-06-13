@@ -5,9 +5,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navItems, site } from "@/lib/site";
 
+function englishPathFor(pathname: string) {
+  if (pathname === "/fa") return "/";
+  if (pathname.startsWith("/fa/")) return pathname.replace(/^\/fa/, "") || "/";
+  return pathname;
+}
+
+function farsiPathFor(pathname: string) {
+  if (pathname === "/") return "/fa";
+  if (pathname.startsWith("/fa")) return pathname;
+  return `/fa${pathname}`;
+}
+
 export function Footer() {
   const pathname = usePathname();
   const isFarsi = pathname.startsWith("/fa");
+  const languageHref = isFarsi ? englishPathFor(pathname) : farsiPathFor(pathname);
+  const languageLabel = isFarsi ? "English" : "فارسی";
 
   return (
     <footer dir={isFarsi ? "rtl" : "ltr"} className="bg-charcoal text-white">
@@ -37,6 +51,9 @@ export function Footer() {
                   {isFarsi ? item.faLabel : item.label}
                 </Link>
               ))}
+              <Link href={languageHref} className="text-sm text-gold transition hover:text-white">
+                {languageLabel}
+              </Link>
             </nav>
           </div>
 

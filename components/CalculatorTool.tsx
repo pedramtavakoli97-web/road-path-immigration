@@ -1,445 +1,430 @@
 "use client";
 
-import { AlertCircle, BriefcaseBusiness, Building2, CheckCircle2, FileBadge2, GraduationCap, HeartHandshake, Landmark, Plane } from "lucide-react";
+import { AlertCircle, CheckCircle2, ExternalLink } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ButtonLink } from "@/components/ButtonLink";
 
-type CategoryId = "family" | "economic" | "work" | "study" | "visitor" | "business" | "pr";
+type Education =
+  | "less-secondary"
+  | "secondary"
+  | "one-year"
+  | "two-year"
+  | "bachelor"
+  | "two-more"
+  | "masters"
+  | "doctoral";
 
-type Option = {
-  label: string;
-  value: number;
-  note?: string;
+type CanadianStudy = "none" | "one-two" | "three-plus";
+
+const ageWithSpouse: Record<string, number> = {
+  "17": 0, "18": 90, "19": 95, "20-29": 100, "30": 95, "31": 90, "32": 85, "33": 80, "34": 75, "35": 70, "36": 65, "37": 60, "38": 55, "39": 50, "40": 45, "41": 35, "42": 25, "43": 15, "44": 5, "45": 0
 };
 
-type Field = {
-  id: string;
-  label: string;
-  help: string;
-  max: number;
-  options: Option[];
+const ageSingle: Record<string, number> = {
+  "17": 0, "18": 99, "19": 105, "20-29": 110, "30": 105, "31": 99, "32": 94, "33": 88, "34": 83, "35": 77, "36": 72, "37": 66, "38": 61, "39": 55, "40": 50, "41": 39, "42": 28, "43": 17, "44": 6, "45": 0
 };
 
-type Section = {
-  title: string;
-  fields: Field[];
+const educationWithSpouse: Record<Education, number> = {
+  "less-secondary": 0,
+  secondary: 28,
+  "one-year": 84,
+  "two-year": 91,
+  bachelor: 112,
+  "two-more": 119,
+  masters: 126,
+  doctoral: 140
 };
 
-type Category = {
-  id: CategoryId;
-  title: string;
-  short: string;
-  icon: typeof Landmark;
-  description: string;
-  sections: Section[];
-  nextStep: string;
+const educationSingle: Record<Education, number> = {
+  "less-secondary": 0,
+  secondary: 30,
+  "one-year": 90,
+  "two-year": 98,
+  bachelor: 120,
+  "two-more": 128,
+  masters: 135,
+  doctoral: 150
 };
 
-const categories: Category[] = [
-  {
-    id: "family",
-    title: "Family Sponsorship",
-    short: "Family",
-    icon: HeartHandshake,
-    description: "Spouse, partner, dependent children, parents and grandparents sponsorship readiness.",
-    nextStep: "Book a family sponsorship consultation to confirm sponsor eligibility, relationship evidence, inland or outland strategy, and document timing.",
-    sections: [
-      {
-        title: "Sponsor Eligibility",
-        fields: [
-          { id: "sponsor_status", label: "Sponsor status in Canada", help: "Sponsor must generally be a Canadian citizen or permanent resident.", max: 20, options: yesNoOptions(20, "Canadian citizen or PR", "Not confirmed") },
-          { id: "sponsor_residence", label: "Sponsor residence and availability", help: "Residency, intention to reside, and ability to support can affect the strategy.", max: 15, options: qualityOptions(15) },
-          { id: "financial_support", label: "Financial and undertaking readiness", help: "Some sponsorship streams require stronger financial evidence.", max: 15, options: qualityOptions(15) }
-        ]
-      },
-      {
-        title: "Relationship & Documents",
-        fields: [
-          { id: "relationship_evidence", label: "Relationship evidence", help: "Proof of genuine relationship, family connection, or dependency.", max: 25, options: qualityOptions(25) },
-          { id: "civil_documents", label: "Civil and identity documents", help: "Passports, marriage/birth records, translations, photos, and supporting evidence.", max: 15, options: qualityOptions(15) },
-          { id: "previous_refusals", label: "Previous refusals or complications", help: "Prior refusals, inadmissibility, or missing records require a stronger plan.", max: 10, options: riskOptions(10) }
-        ]
-      }
-    ]
-  },
-  {
-    id: "economic",
-    title: "Express Entry & Provincial Nominee Programs (PNPs)",
-    short: "Express Entry & PNP",
-    icon: Landmark,
-    description: "CRS, FSW eligibility, provincial nomination fit, and permanent residence document readiness.",
-    nextStep: "Request a CRS and PNP assessment to confirm exact score, target provinces, document gaps, and improvement strategy.",
-    sections: [
-      {
-        title: "Human Capital",
-        fields: [
-          { id: "age", label: "Age range", help: "Age affects CRS and Federal Skilled Worker selection factors.", max: 15, options: ageOptions() },
-          { id: "education", label: "Education level / ECA readiness", help: "Education and credential assessment are core economic immigration factors.", max: 20, options: educationOptions(20) },
-          { id: "language", label: "Language test results", help: "IELTS, CELPIP, TEF, or TCF results can heavily affect eligibility.", max: 25, options: languageOptions(25) },
-          { id: "work_experience", label: "Skilled work experience", help: "Relevant NOC/TEER experience and reference letters matter.", max: 20, options: experienceOptions(20) }
-        ]
-      },
-      {
-        title: "PNP & Application Strength",
-        fields: [
-          { id: "canadian_connection", label: "Canadian connection", help: "Canadian work, study, job offer, family, or province ties can improve options.", max: 15, options: qualityOptions(15) },
-          { id: "pnp_fit", label: "Provincial stream fit", help: "Occupation, job offer, province ties, and targeted draws affect PNP options.", max: 20, options: qualityOptions(20) },
-          { id: "settlement_funds", label: "Settlement funds and documents", help: "Proof of funds, police certificates, medicals, and references must be planned.", max: 15, options: qualityOptions(15) }
-        ]
-      }
-    ]
-  },
-  {
-    id: "work",
-    title: "Work Permits & Employer",
-    short: "Work Permits",
-    icon: BriefcaseBusiness,
-    description: "Employer-specific permits, LMIA, LMIA-exempt routes, Global Talent Stream, intra-company transfer, and extensions.",
-    nextStep: "Book a work permit strategy review to identify LMIA, LMIA-exempt, employer-specific, open work permit, or extension options.",
-    sections: [
-      {
-        title: "Employer & Job Offer",
-        fields: [
-          { id: "job_offer", label: "Canadian job offer", help: "A detailed offer letter or contract is often central to work permit strategy.", max: 25, options: yesPartialNoOptions(25, "Offer confirmed", "Offer in progress", "No offer yet") },
-          { id: "employer_readiness", label: "Employer compliance readiness", help: "Employer business legitimacy, recruitment, wages, and compliance can affect applications.", max: 20, options: qualityOptions(20) },
-          { id: "lmia_or_exemption", label: "LMIA or exemption pathway", help: "The route may involve LMIA, CUSMA, intra-company transfer, significant benefit, or another exemption.", max: 20, options: yesPartialNoOptions(20, "Pathway identified", "Needs review", "Unknown") }
-        ]
-      },
-      {
-        title: "Worker Profile",
-        fields: [
-          { id: "worker_experience", label: "Worker experience and qualifications", help: "Experience, education, licensing, and role fit support approval.", max: 20, options: qualityOptions(20) },
-          { id: "temporary_intent", label: "Temporary intent and status history", help: "Travel history, current status, and purpose of work should be coherent.", max: 10, options: qualityOptions(10) },
-          { id: "extension_timing", label: "Timing / extension urgency", help: "Expired or near-expiry status requires careful timing.", max: 10, options: riskOptions(10) }
-        ]
-      }
-    ]
-  },
-  {
-    id: "study",
-    title: "Study Permits & Student Support",
-    short: "Study Permits",
-    icon: GraduationCap,
-    description: "Study permits, extensions, PGWP planning, co-op work authorization, and study-to-PR strategy.",
-    nextStep: "Start a study permit review to confirm DLI/program fit, study plan, finances, and PGWP or PR pathway.",
-    sections: [
-      {
-        title: "Program & Study Plan",
-        fields: [
-          { id: "dli_acceptance", label: "DLI acceptance / admission", help: "A valid acceptance from a designated learning institution is essential.", max: 25, options: yesPartialNoOptions(25, "Accepted", "Application in progress", "Not yet") },
-          { id: "study_plan", label: "Study plan strength", help: "Program choice should make sense with education, career, and future plans.", max: 25, options: qualityOptions(25) },
-          { id: "academic_history", label: "Academic and career consistency", help: "Past studies, employment, and future purpose should align.", max: 15, options: qualityOptions(15) }
-        ]
-      },
-      {
-        title: "Financials & Long-Term Planning",
-        fields: [
-          { id: "student_funds", label: "Tuition and living expense evidence", help: "Financial proof should cover tuition, living costs, and sponsor support where applicable.", max: 25, options: qualityOptions(25) },
-          { id: "home_ties", label: "Home-country ties and temporary intent", help: "Family, employment, assets, and purpose can support temporary intent.", max: 15, options: qualityOptions(15) },
-          { id: "pgwp_pr", label: "PGWP / PR pathway planning", help: "The program should support future work and permanent residence plans where possible.", max: 15, options: qualityOptions(15) }
-        ]
-      }
-    ]
-  },
-  {
-    id: "visitor",
-    title: "Visitor Visas & Super Visa",
-    short: "Visitor / Super Visa",
-    icon: Plane,
-    description: "Temporary resident visa, eTA review, invitation letters, super visa insurance, and visitor extension planning.",
-    nextStep: "Request a visitor or super visa review to prepare invitation letters, financial evidence, ties documents, and super visa insurance where needed.",
-    sections: [
-      {
-        title: "Purpose & Temporary Intent",
-        fields: [
-          { id: "visit_purpose", label: "Purpose of visit", help: "Tourism, family visit, business visit, or super visa purpose should be clear.", max: 20, options: qualityOptions(20) },
-          { id: "ties_home", label: "Ties to home country", help: "Employment, family, property, studies, or obligations can support return intent.", max: 25, options: qualityOptions(25) },
-          { id: "travel_history", label: "Travel and compliance history", help: "Prior compliant travel can strengthen a temporary resident case.", max: 15, options: qualityOptions(15) }
-        ]
-      },
-      {
-        title: "Support & Super Visa Details",
-        fields: [
-          { id: "visitor_funds", label: "Financial support", help: "Applicant and host financial evidence should match the trip plan.", max: 20, options: qualityOptions(20) },
-          { id: "invitation", label: "Invitation and host documents", help: "Family visits and super visa cases often need host support documents.", max: 15, options: qualityOptions(15) },
-          { id: "super_visa_insurance", label: "Super visa insurance / medical readiness", help: "Parents and grandparents need super visa-specific insurance and medical planning.", max: 15, options: yesPartialNoOptions(15, "Ready if needed", "Needs review", "Not applicable / unknown") }
-        ]
-      }
-    ]
-  },
-  {
-    id: "business",
-    title: "Business Immigration",
-    short: "Business",
-    icon: Building2,
-    description: "Start-Up Visa, provincial entrepreneur streams, investor readiness, business plans, and performance requirements.",
-    nextStep: "Schedule a business immigration strategy session to review stream fit, business plan, designated organization options, investment evidence, and timelines.",
-    sections: [
-      {
-        title: "Business Concept & Experience",
-        fields: [
-          { id: "business_experience", label: "Business ownership / management experience", help: "Entrepreneur and investor programs often require strong business background.", max: 20, options: qualityOptions(20) },
-          { id: "innovation", label: "Innovation or market potential", help: "Start-Up Visa and entrepreneur streams depend on a credible, scalable plan.", max: 20, options: qualityOptions(20) },
-          { id: "business_plan", label: "Business plan readiness", help: "A professional plan, projections, and market strategy are usually required.", max: 25, options: qualityOptions(25) }
-        ]
-      },
-      {
-        title: "Funding & Program Fit",
-        fields: [
-          { id: "investment_funds", label: "Investment / settlement funds", help: "Funding source, availability, and transferability should be documented.", max: 25, options: qualityOptions(25) },
-          { id: "designated_support", label: "Designated organization or provincial fit", help: "Some pathways need designated organization support or provincial stream fit.", max: 20, options: qualityOptions(20) },
-          { id: "job_creation", label: "Job creation / performance commitments", help: "Provincial entrepreneur streams may require job creation and business performance.", max: 10, options: qualityOptions(10) }
-        ]
-      }
-    ]
-  },
-  {
-    id: "pr",
-    title: "PR Card Services, Travel Documents & Appeals",
-    short: "PR / Appeals",
-    icon: FileBadge2,
-    description: "PR card renewal or replacement, PRTD, residency obligation review, refusals, restoration, and appeal strategy.",
-    nextStep: "Book a PR status or refusal consultation to review residency days, travel history, refusal reasons, deadlines, and possible remedies.",
-    sections: [
-      {
-        title: "Status & Residency",
-        fields: [
-          { id: "pr_status", label: "Current PR/status document situation", help: "Valid, expired, lost, outside Canada, or complex status must be identified.", max: 20, options: yesPartialNoOptions(20, "Status documented", "Needs review", "Unclear") },
-          { id: "residency_days", label: "Residency obligation evidence", help: "Days in Canada, travel records, tax filings, and proof of residence matter.", max: 25, options: qualityOptions(25) },
-          { id: "travel_records", label: "Travel history records", help: "Entry/exit history and supporting documents can be central.", max: 15, options: qualityOptions(15) }
-        ]
-      },
-      {
-        title: "Remedies & Risk",
-        fields: [
-          { id: "deadline", label: "Deadline or urgency control", help: "Appeals, judicial review, restoration, and document requests can have strict deadlines.", max: 20, options: riskOptions(20) },
-          { id: "refusal_reasons", label: "Refusal or inadmissibility reasons", help: "Written reasons, prior applications, and evidence gaps should be reviewed.", max: 20, options: riskOptions(20) },
-          { id: "supporting_evidence", label: "Humanitarian or supporting evidence", help: "Family hardship, establishment, medical, employment, and compassionate factors may matter.", max: 15, options: qualityOptions(15) }
-        ]
-      }
-    ]
-  }
+const spouseEducation: Record<Education, number> = {
+  "less-secondary": 0,
+  secondary: 2,
+  "one-year": 6,
+  "two-year": 7,
+  bachelor: 8,
+  "two-more": 9,
+  masters: 10,
+  doctoral: 10
+};
+
+const canadianWorkWithSpouse = [0, 35, 46, 56, 63, 70];
+const canadianWorkSingle = [0, 40, 53, 64, 72, 80];
+const spouseCanadianWork = [0, 5, 7, 8, 9, 10];
+
+const clbOptions = [
+  { value: 0, label: "Less than CLB 4" },
+  { value: 4, label: "CLB 4" },
+  { value: 5, label: "CLB 5" },
+  { value: 6, label: "CLB 6" },
+  { value: 7, label: "CLB 7" },
+  { value: 8, label: "CLB 8" },
+  { value: 9, label: "CLB 9" },
+  { value: 10, label: "CLB 10 or more" }
 ];
 
-const initialAnswers = Object.fromEntries(
-  categories.flatMap((category) => category.sections.flatMap((section) => section.fields.map((field) => [field.id, -1])))
-) as Record<string, number>;
+const ageOptions: Array<[string, string]> = [
+  ["17", "17 years of age or less"],
+  ["18", "18 years of age"],
+  ["19", "19 years of age"],
+  ["20-29", "20 to 29 years of age"],
+  ["30", "30 years of age"],
+  ["31", "31 years of age"],
+  ["32", "32 years of age"],
+  ["33", "33 years of age"],
+  ["34", "34 years of age"],
+  ["35", "35 years of age"],
+  ["36", "36 years of age"],
+  ["37", "37 years of age"],
+  ["38", "38 years of age"],
+  ["39", "39 years of age"],
+  ["40", "40 years of age"],
+  ["41", "41 years of age"],
+  ["42", "42 years of age"],
+  ["43", "43 years of age"],
+  ["44", "44 years of age"],
+  ["45", "45 years of age or more"]
+];
+
+const educationOptions: Array<[Education, string]> = [
+  ["less-secondary", "Less than secondary school"],
+  ["secondary", "Secondary diploma"],
+  ["one-year", "One-year degree, diploma or certificate"],
+  ["two-year", "Two-year program"],
+  ["bachelor", "Bachelor's degree or three-year program"],
+  ["two-more", "Two or more credentials, one three years or longer"],
+  ["masters", "Master's or professional degree"],
+  ["doctoral", "Doctoral level university degree"]
+];
+
+function firstLanguageAbilityPoints(clb: number, withSpouse: boolean) {
+  if (clb < 4) return 0;
+  if (clb <= 5) return 6;
+  if (clb === 6) return withSpouse ? 8 : 9;
+  if (clb === 7) return withSpouse ? 16 : 17;
+  if (clb === 8) return withSpouse ? 22 : 23;
+  if (clb === 9) return withSpouse ? 29 : 31;
+  return withSpouse ? 32 : 34;
+}
+
+function secondLanguageAbilityPoints(clb: number) {
+  if (clb <= 4) return 0;
+  if (clb <= 6) return 1;
+  if (clb <= 8) return 3;
+  return 6;
+}
+
+function spouseLanguageAbilityPoints(clb: number) {
+  if (clb <= 4) return 0;
+  if (clb <= 6) return 1;
+  if (clb <= 8) return 3;
+  return 5;
+}
+
+function educationTransferTier(education: Education) {
+  if (education === "less-secondary" || education === "secondary") return "none";
+  if (education === "one-year" || education === "two-year" || education === "bachelor") return "post-secondary";
+  return "advanced";
+}
+
+function yearsIndex(value: number) {
+  return Math.min(Math.max(value, 0), 5);
+}
+
+function allAtLeast(values: number[], minimum: number) {
+  return values.every((value) => value >= minimum);
+}
+
+function someBelow(values: number[], minimum: number) {
+  return values.some((value) => value < minimum);
+}
 
 export function CalculatorTool() {
-  const [activeId, setActiveId] = useState<CategoryId>("family");
-  const [answers, setAnswers] = useState<Record<string, number>>(initialAnswers);
+  const [marital, setMarital] = useState("single");
+  const [spouseCanadian, setSpouseCanadian] = useState("no");
+  const [spouseComing, setSpouseComing] = useState("yes");
+  const [age, setAge] = useState("20-29");
+  const [education, setEducation] = useState<Education>("bachelor");
+  const [firstLanguage, setFirstLanguage] = useState([9, 9, 9, 9]);
+  const [secondLanguage, setSecondLanguage] = useState([0, 0, 0, 0]);
+  const [canadianWork, setCanadianWork] = useState(0);
+  const [foreignWork, setForeignWork] = useState(0);
+  const [certificate, setCertificate] = useState(false);
+  const [nomination, setNomination] = useState(false);
+  const [sibling, setSibling] = useState(false);
+  const [canadianStudy, setCanadianStudy] = useState<CanadianStudy>("none");
+  const [frenchNclc7, setFrenchNclc7] = useState(false);
+  const [englishLevel, setEnglishLevel] = useState("none-low");
+  const [spouseEducationLevel, setSpouseEducationLevel] = useState<Education>("less-secondary");
+  const [spouseLanguage, setSpouseLanguage] = useState([0, 0, 0, 0]);
+  const [spouseWork, setSpouseWork] = useState(0);
 
-  const active = categories.find((category) => category.id === activeId) ?? categories[0];
+  const withSpouse = (marital === "married" || marital === "common-law") && spouseCanadian === "no" && spouseComing === "yes";
 
   const result = useMemo(() => {
-    const fields = active.sections.flatMap((section) => section.fields);
-    const total = fields.reduce((sum, field) => sum + field.max, 0);
-    const score = fields.reduce((sum, field) => sum + Math.max(0, answers[field.id] ?? 0), 0);
-    const percent = total ? Math.round((score / total) * 100) : 0;
-    const band = percent >= 78 ? "Strong readiness" : percent >= 58 ? "Promising, with gaps" : "Needs focused preparation";
+    const agePoints = (withSpouse ? ageWithSpouse : ageSingle)[age] ?? 0;
+    const educationPoints = (withSpouse ? educationWithSpouse : educationSingle)[education];
+    const firstLanguagePoints = firstLanguage.reduce((sum, clb) => sum + firstLanguageAbilityPoints(clb, withSpouse), 0);
+    const secondLanguageRaw = secondLanguage.reduce((sum, clb) => sum + secondLanguageAbilityPoints(clb), 0);
+    const secondLanguagePoints = Math.min(secondLanguageRaw, withSpouse ? 22 : 24);
+    const canadianWorkPoints = (withSpouse ? canadianWorkWithSpouse : canadianWorkSingle)[yearsIndex(canadianWork)];
+    const core = agePoints + educationPoints + firstLanguagePoints + secondLanguagePoints + canadianWorkPoints;
 
-    const strengths = fields
-      .filter((field) => Math.max(0, answers[field.id] ?? 0) >= field.max * 0.72)
-      .map((field) => field.label);
+    const spouse = withSpouse
+      ? spouseEducation[spouseEducationLevel] +
+        Math.min(spouseLanguage.reduce((sum, clb) => sum + spouseLanguageAbilityPoints(clb), 0), 20) +
+        spouseCanadianWork[yearsIndex(spouseWork)]
+      : 0;
 
-    const improvements = fields
-      .filter((field) => Math.max(0, answers[field.id] ?? 0) < field.max * 0.55)
-      .map((field) => field.label);
+    const languageAt7 = allAtLeast(firstLanguage, 7);
+    const languageAt9 = allAtLeast(firstLanguage, 9);
+    const languageAt5 = allAtLeast(firstLanguage, 5);
+    const languageAt7SomeBelow9 = languageAt7 && someBelow(firstLanguage, 9);
+    const languageAt5SomeBelow7 = languageAt5 && someBelow(firstLanguage, 7);
+    const educationTier = educationTransferTier(education);
 
-    return { total, score, percent, band, strengths, improvements };
-  }, [active, answers]);
+    const educationLanguage =
+      educationTier === "none" || !languageAt7 ? 0 : languageAt9 ? (educationTier === "advanced" ? 50 : 25) : languageAt7SomeBelow9 ? (educationTier === "advanced" ? 25 : 13) : 0;
+
+    const educationCanadianWork =
+      educationTier === "none" || canadianWork < 1 ? 0 : canadianWork >= 2 ? (educationTier === "advanced" ? 50 : 25) : educationTier === "advanced" ? 25 : 13;
+
+    const foreignLanguage =
+      foreignWork < 1 || !languageAt7 ? 0 : languageAt9 ? (foreignWork >= 3 ? 50 : 25) : languageAt7SomeBelow9 ? (foreignWork >= 3 ? 25 : 13) : 0;
+
+    const foreignCanadianWork =
+      foreignWork < 1 || canadianWork < 1 ? 0 : canadianWork >= 2 ? (foreignWork >= 3 ? 50 : 25) : foreignWork >= 3 ? 25 : 13;
+
+    const certificatePoints = certificate && languageAt5 ? (allAtLeast(firstLanguage, 7) ? 50 : languageAt5SomeBelow7 ? 25 : 0) : 0;
+    const transferability = Math.min(educationLanguage + educationCanadianWork + foreignLanguage + foreignCanadianWork + certificatePoints, 100);
+
+    const frenchPoints = frenchNclc7 ? (englishLevel === "clb5-plus" ? 50 : 25) : 0;
+    const additional =
+      (sibling ? 15 : 0) +
+      frenchPoints +
+      (canadianStudy === "one-two" ? 15 : canadianStudy === "three-plus" ? 30 : 0) +
+      (nomination ? 600 : 0);
+
+    const total = core + spouse + transferability + additional;
+
+    return {
+      total,
+      core,
+      spouse,
+      transferability,
+      additional,
+      details: [
+        ["Age", agePoints],
+        ["Education", educationPoints],
+        ["First official language", firstLanguagePoints],
+        ["Second official language", secondLanguagePoints],
+        ["Canadian work experience", canadianWorkPoints],
+        ["Spouse factors", spouse],
+        ["Skill transferability", transferability],
+        ["Additional points", additional]
+      ] as Array<[string, number]>
+    };
+  }, [age, canadianStudy, canadianWork, certificate, education, englishLevel, firstLanguage, foreignWork, frenchNclc7, nomination, secondLanguage, sibling, spouseEducationLevel, spouseLanguage, spouseWork, withSpouse]);
 
   return (
-    <div className="grid gap-8">
-      <div className="rounded-lg bg-charcoal p-5 text-white shadow-luxury sm:p-6">
-        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-gold">Calculator Categories</p>
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {categories.map((category) => {
-            const Icon = category.icon;
-            const isActive = active.id === category.id;
+    <div className="grid gap-8 lg:grid-cols-[1fr_370px]">
+      <div className="luxury-border rounded-lg bg-white p-6 shadow-luxury sm:p-8">
+        <div className="border-b border-charcoal/10 pb-7">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-burgundy">Express Entry CRS Calculator</p>
+          <h2 className="mt-3 font-serif text-4xl leading-tight text-charcoal">Comprehensive Ranking System score</h2>
+          <p className="mt-4 max-w-3xl leading-8 text-charcoal/70">
+            This calculator follows the official Canada.ca CRS criteria. Job offer points are not included because IRCC removed them from the CRS as of March 25, 2025.
+          </p>
+          <a
+            href="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/check-score.html"
+            target="_blank"
+            rel="noreferrer"
+            className="mt-5 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-burgundy transition hover:text-charcoal"
+          >
+            Official Canada.ca calculator <ExternalLink size={16} />
+          </a>
+        </div>
 
-            return (
-              <button
-                key={category.id}
-                type="button"
-                onClick={() => setActiveId(category.id)}
-                aria-pressed={isActive}
-                className={`focus-ring flex min-h-20 items-center gap-3 rounded border p-4 text-left transition duration-300 ${
-                  isActive ? "border-gold bg-gold text-charcoal" : "border-white/10 bg-white/[0.04] text-white hover:border-gold hover:bg-white/[0.08]"
-                }`}
-              >
-                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded ${isActive ? "bg-charcoal text-gold" : "bg-white/8 text-gold"}`}>
-                  <Icon size={19} />
-                </span>
-                <span className="font-serif text-base leading-tight sm:text-lg">{category.title}</span>
-              </button>
-            );
-          })}
+        <div className="mt-8 grid gap-8">
+          <FormSection title="Marital status">
+            <Select label="What is your marital status?" value={marital} onChange={setMarital} options={[
+              ["single", "Never married / single, divorced, separated or widowed"],
+              ["married", "Married"],
+              ["common-law", "Common-law"]
+            ]} />
+            {(marital === "married" || marital === "common-law") ? (
+              <div className="grid gap-5 md:grid-cols-2">
+                <Select label="Is your spouse or partner a Canadian citizen or permanent resident?" value={spouseCanadian} onChange={setSpouseCanadian} options={[["no", "No"], ["yes", "Yes"]]} />
+                <Select label="Will your spouse or partner come with you to Canada?" value={spouseComing} onChange={setSpouseComing} options={[["yes", "Yes"], ["no", "No"]]} />
+              </div>
+            ) : null}
+          </FormSection>
+
+          <FormSection title="Core / human capital factors">
+            <div className="grid gap-5 md:grid-cols-2">
+              <Select label="Age" value={age} onChange={setAge} options={ageOptions} />
+              <Select label="Level of education" value={education} onChange={(value) => setEducation(value as Education)} options={educationOptions} />
+              <Select label="Canadian skilled work experience" value={String(canadianWork)} onChange={(value) => setCanadianWork(Number(value))} options={yearOptions(5)} />
+              <Select label="Foreign skilled work experience" value={String(foreignWork)} onChange={(value) => setForeignWork(Number(value))} options={yearOptions(3)} />
+            </div>
+          </FormSection>
+
+          <LanguageSection title="First official language" values={firstLanguage} onChange={setFirstLanguage} />
+          <LanguageSection title="Second official language" values={secondLanguage} onChange={setSecondLanguage} />
+
+          {withSpouse ? (
+            <FormSection title="Spouse or common-law partner factors">
+              <div className="grid gap-5 md:grid-cols-2">
+                <Select label="Spouse education" value={spouseEducationLevel} onChange={(value) => setSpouseEducationLevel(value as Education)} options={educationOptions} />
+                <Select label="Spouse Canadian work experience" value={String(spouseWork)} onChange={(value) => setSpouseWork(Number(value))} options={yearOptions(5)} />
+              </div>
+              <LanguageSection title="Spouse first official language" values={spouseLanguage} onChange={setSpouseLanguage} nested />
+            </FormSection>
+          ) : null}
+
+          <FormSection title="Certificates and additional points">
+            <div className="grid gap-5 md:grid-cols-2">
+              <Select label="Certificate of qualification from Canada" value={certificate ? "yes" : "no"} onChange={(value) => setCertificate(value === "yes")} options={[["no", "No"], ["yes", "Yes"]]} />
+              <Select label="Provincial or territorial nomination" value={nomination ? "yes" : "no"} onChange={(value) => setNomination(value === "yes")} options={[["no", "No"], ["yes", "Yes, 600 points"]]} />
+              <Select label="Sibling in Canada" value={sibling ? "yes" : "no"} onChange={(value) => setSibling(value === "yes")} options={[["no", "No"], ["yes", "Yes, 15 points"]]} />
+              <Select label="Canadian post-secondary education" value={canadianStudy} onChange={(value) => setCanadianStudy(value as CanadianStudy)} options={[
+                ["none", "No"],
+                ["one-two", "One- or two-year credential"],
+                ["three-plus", "Credential of three years or longer"]
+              ]} />
+              <Select label="French language skills: NCLC 7 or higher in all four abilities" value={frenchNclc7 ? "yes" : "no"} onChange={(value) => setFrenchNclc7(value === "yes")} options={[["no", "No"], ["yes", "Yes"]]} />
+              <Select label="English language level for French additional points" value={englishLevel} onChange={setEnglishLevel} options={[
+                ["none-low", "CLB 4 or lower, or no English test"],
+                ["clb5-plus", "CLB 5 or higher in all four abilities"]
+              ]} />
+            </div>
+          </FormSection>
         </div>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_370px]">
-        <div className="luxury-border rounded-lg bg-white p-6 shadow-luxury sm:p-8">
-          <div className="flex flex-col gap-5 border-b border-charcoal/10 pb-7 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-burgundy">Get Your Score</p>
-              <h2 className="mt-3 font-serif text-4xl leading-tight text-charcoal">{active.title}</h2>
-              <p className="mt-4 max-w-3xl leading-8 text-charcoal/70">{active.description}</p>
-            </div>
-            <ButtonLink href="/assessment-form" variant="secondary" className="shrink-0">
-              Full Assessment
-            </ButtonLink>
+      <aside className="grid gap-5 lg:sticky lg:top-28 lg:self-start">
+        <div className="rounded-lg bg-charcoal p-6 text-white shadow-luxury">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-gold">CRS Score</p>
+          <div className="mt-5 flex items-end gap-3">
+            <p className="font-serif text-6xl">{result.total}</p>
+            <p className="pb-2 text-white/58">/ 1200</p>
           </div>
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full rounded-full bg-gold transition-all duration-500" style={{ width: `${Math.min(100, (result.total / 1200) * 100)}%` }} />
+          </div>
+          <p className="mt-5 text-sm leading-6 text-white/64">
+            This result is for general guidance. If the official Express Entry system gives a different result, the official system governs.
+          </p>
+        </div>
 
-          <div className="mt-8 grid gap-8">
-            {active.sections.map((section) => (
-              <section key={section.title} className="rounded-lg bg-porcelain p-5 sm:p-6">
-                <h3 className="font-serif text-2xl text-charcoal">{section.title}</h3>
-                <div className="mt-5 grid gap-5">
-                  {section.fields.map((field) => (
-                    <label key={field.id} className="grid gap-2">
-                      <span className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-                        <span className="font-semibold text-charcoal">{field.label}</span>
-                        <span className="text-sm font-semibold text-burgundy">{Math.max(0, answers[field.id] ?? 0)} / {field.max} pts</span>
-                      </span>
-                      <span className="text-sm leading-6 text-charcoal/58">{field.help}</span>
-                      <select
-                        value={answers[field.id] ?? 0}
-                        onChange={(event) => setAnswers((current) => ({ ...current, [field.id]: Number(event.target.value) }))}
-                        className="focus-ring min-h-12 rounded border border-charcoal/15 bg-white px-4 text-base text-charcoal outline-none transition hover:border-gold"
-                      >
-                        <option value={-1}>Select an answer</option>
-                        {field.options.map((option) => (
-                          <option key={`${field.id}-${option.label}`} value={option.value}>
-                            {option.label}{option.note ? ` - ${option.note}` : ""}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  ))}
-                </div>
-              </section>
+        <div className="rounded-lg border border-charcoal/10 bg-white p-6 shadow-sm">
+          <p className="font-serif text-2xl text-charcoal">Score breakdown</p>
+          <ul className="mt-4 grid gap-3">
+            {result.details.map(([label, value]) => (
+              <li key={label} className="flex items-center justify-between gap-4 text-sm leading-6 text-charcoal/72">
+                <span>{label}</span>
+                <span className="font-semibold text-burgundy">{value}</span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
 
-        <aside className="grid gap-5 lg:sticky lg:top-28 lg:self-start">
-          <div className="rounded-lg bg-charcoal p-6 text-white shadow-luxury">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-gold">Score Result</p>
-            <div className="mt-5 flex items-end gap-3">
-              <p className="font-serif text-6xl">{result.score}</p>
-              <p className="pb-2 text-white/58">/ {result.total}</p>
-            </div>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
-              <div className="h-full rounded-full bg-gold transition-all duration-500" style={{ width: `${result.percent}%` }} />
-            </div>
-            <p className="mt-5 font-serif text-2xl">{result.band}</p>
-            <p className="mt-3 text-sm leading-6 text-white/64">
-              This is a planning score, not a legal decision. A consultation should confirm documents, current rules, deadlines, and exact eligibility.
-            </p>
-          </div>
+        <div className="rounded-lg border border-charcoal/10 bg-white p-6 shadow-sm">
+          <p className="font-serif text-2xl text-charcoal">Notes</p>
+          <ul className="mt-4 grid gap-3 text-sm leading-6 text-charcoal/72">
+            <li className="flex gap-3"><CheckCircle2 className="mt-0.5 shrink-0 text-gold" size={17} />Score includes a maximum of 100 points for skill transferability.</li>
+            <li className="flex gap-3"><AlertCircle className="mt-0.5 shrink-0 text-burgundy" size={17} />Job offer CRS points are not counted under the current Canada.ca rules.</li>
+          </ul>
+        </div>
 
-          <Breakdown title="Strong Areas" items={result.strengths} icon="good" empty="Select stronger answers to reveal profile strengths." />
-          <Breakdown title="Needs Review" items={result.improvements} icon="warn" empty="No major weak areas selected for this category." />
-
-          <div className="rounded-lg bg-porcelain p-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-burgundy">Recommended Next Step</p>
-            <p className="mt-3 leading-7 text-charcoal/72">{active.nextStep}</p>
-            <ButtonLink href="/consultation-booking" className="mt-5 w-full">
-              Book Consultation
-            </ButtonLink>
-          </div>
-        </aside>
-      </div>
+        <div className="rounded-lg bg-porcelain p-6">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-burgundy">Next Step</p>
+          <p className="mt-3 leading-7 text-charcoal/72">Review your CRS score, documents, language results, ECA and possible PNP options in a consultation.</p>
+          <ButtonLink href="/consultation-booking" className="mt-5 w-full">
+            Book Consultation
+          </ButtonLink>
+        </div>
+      </aside>
     </div>
   );
 }
 
-function Breakdown({ title, items, icon, empty }: { title: string; items: string[]; icon: "good" | "warn"; empty: string }) {
-  const Icon = icon === "good" ? CheckCircle2 : AlertCircle;
+function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-lg bg-porcelain p-5 sm:p-6">
+      <h3 className="font-serif text-2xl text-charcoal">{title}</h3>
+      <div className="mt-5 grid gap-5">{children}</div>
+    </section>
+  );
+}
+
+function LanguageSection({ title, values, onChange, nested = false }: { title: string; values: number[]; onChange: (values: number[]) => void; nested?: boolean }) {
+  const labels = ["Speaking", "Listening", "Reading", "Writing"];
 
   return (
-    <div className="rounded-lg border border-charcoal/10 bg-white p-6 shadow-sm">
-      <p className="font-serif text-2xl text-charcoal">{title}</p>
-      <ul className="mt-4 grid gap-3">
-        {items.length ? items.map((item) => (
-          <li key={item} className="flex gap-3 text-sm leading-6 text-charcoal/72">
-            <Icon className={icon === "good" ? "mt-0.5 shrink-0 text-gold" : "mt-0.5 shrink-0 text-burgundy"} size={17} />
-            <span>{item}</span>
-          </li>
-        )) : (
-          <li className="text-sm leading-6 text-charcoal/55">{empty}</li>
-        )}
-      </ul>
-    </div>
+    <section className={nested ? "rounded-lg bg-white p-5" : "rounded-lg bg-porcelain p-5 sm:p-6"}>
+      <h3 className="font-serif text-2xl text-charcoal">{title}</h3>
+      <div className="mt-5 grid gap-5 md:grid-cols-2">
+        {labels.map((label, index) => (
+          <label key={label} className="grid gap-2">
+            <span className="font-semibold text-charcoal">{label}</span>
+            <select
+              value={values[index]}
+              onChange={(event) => {
+                const next = [...values];
+                next[index] = Number(event.target.value);
+                onChange(next);
+              }}
+              className="focus-ring min-h-12 rounded border border-charcoal/15 bg-white px-4 text-base text-charcoal outline-none transition hover:border-gold"
+            >
+              {clbOptions.map((option) => (
+                <option key={`${label}-${option.value}`} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+        ))}
+      </div>
+    </section>
   );
 }
 
-function yesNoOptions(max: number, yes: string, no: string): Option[] {
-  return [
-    { label: yes, value: max },
-    { label: no, value: 0 }
-  ];
+function Select({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: Array<[string, string]> }) {
+  return (
+    <label className="grid gap-2">
+      <span className="font-semibold text-charcoal">{label}</span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="focus-ring min-h-12 rounded border border-charcoal/15 bg-white px-4 text-base text-charcoal outline-none transition hover:border-gold"
+      >
+        {options.map(([optionValue, optionLabel]) => (
+          <option key={optionValue} value={optionValue}>{optionLabel}</option>
+        ))}
+      </select>
+    </label>
+  );
 }
 
-function yesPartialNoOptions(max: number, yes: string, partial: string, no: string): Option[] {
-  return [
-    { label: yes, value: max },
-    { label: partial, value: Math.round(max * 0.55) },
-    { label: no, value: 0 }
+function yearOptions(maximum: 3 | 5): Array<[string, string]> {
+  const base: Array<[string, string]> = [
+    ["0", "None or less than a year"],
+    ["1", "1 year"],
+    ["2", "2 years"],
+    ["3", maximum === 3 ? "3 years or more" : "3 years"]
   ];
-}
 
-function qualityOptions(max: number): Option[] {
-  return [
-    { label: "Strong / complete", value: max },
-    { label: "Moderate / needs review", value: Math.round(max * 0.6) },
-    { label: "Weak / not ready", value: Math.round(max * 0.25) },
-    { label: "Not available", value: 0 }
-  ];
-}
+  if (maximum === 5) {
+    base.push(["4", "4 years"], ["5", "5 years or more"]);
+  }
 
-function riskOptions(max: number): Option[] {
-  return [
-    { label: "No major risk identified", value: max },
-    { label: "Some risk / needs review", value: Math.round(max * 0.55) },
-    { label: "High risk or urgent deadline", value: Math.round(max * 0.15) }
-  ];
-}
-
-function ageOptions(): Option[] {
-  return [
-    { label: "18-29", value: 15 },
-    { label: "30-35", value: 12 },
-    { label: "36-40", value: 8 },
-    { label: "41-45", value: 4 },
-    { label: "46+", value: 0 }
-  ];
-}
-
-function educationOptions(max: number): Option[] {
-  return [
-    { label: "Master's / professional / doctorate", value: max },
-    { label: "Bachelor's or two credentials", value: Math.round(max * 0.82) },
-    { label: "Diploma / trade / post-secondary", value: Math.round(max * 0.58) },
-    { label: "Secondary or less", value: Math.round(max * 0.25) }
-  ];
-}
-
-function languageOptions(max: number): Option[] {
-  return [
-    { label: "CLB 9+ or equivalent", value: max },
-    { label: "CLB 7-8 or equivalent", value: Math.round(max * 0.72) },
-    { label: "CLB 5-6 or equivalent", value: Math.round(max * 0.42) },
-    { label: "No valid test yet", value: 0 }
-  ];
-}
-
-function experienceOptions(max: number): Option[] {
-  return [
-    { label: "3+ years skilled experience", value: max },
-    { label: "2 years skilled experience", value: Math.round(max * 0.72) },
-    { label: "1 year skilled experience", value: Math.round(max * 0.5) },
-    { label: "Less than 1 year / unclear", value: 0 }
-  ];
+  return base;
 }

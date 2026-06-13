@@ -1,19 +1,17 @@
-import { AssessmentCta } from "@/components/sections/AssessmentCta";
-import { BookingCta } from "@/components/sections/BookingCta";
 import { Hero } from "@/components/sections/Hero";
-import { Programs } from "@/components/sections/Programs";
-import { ServiceSlider } from "@/components/sections/ServiceSlider";
+import { HomeActionCards } from "@/components/sections/HomeActionCards";
+import { MapleProgramPuzzle } from "@/components/sections/MapleProgramPuzzle";
+import { NewsLinkCta } from "@/components/sections/NewsLinkCta";
 import { WhyChooseUs } from "@/components/sections/WhyChooseUs";
 
 export default function HomePage() {
   return (
     <>
       <Hero />
-      <ServiceSlider />
+      <HomeActionCards />
+      <MapleProgramPuzzle />
       <WhyChooseUs />
-      <Programs />
-      <AssessmentCta />
-      <BookingCta />
+      <NewsLinkCta />
     </>
   );
 }

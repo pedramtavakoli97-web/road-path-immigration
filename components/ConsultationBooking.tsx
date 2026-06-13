@@ -8,15 +8,15 @@ type Locale = "en" | "fa";
 type PaymentId = "card" | "etransfer" | "invoice";
 
 const consultationPackage = {
-  en: { title: "Basic Immigration Consultation", duration: "45 minutes", price: 150, description: "A focused session to review your situation, discuss suitable pathways, and outline next steps." },
-  fa: { title: "مشاوره پایه مهاجرت", duration: "۴۵ دقیقه", price: 150, description: "جلسه‌ای متمرکز برای بررسی شرایط شما، معرفی مسیرهای مناسب و توضیح مراحل بعدی." }
+  en: { title: "Basic Immigration Consultation", duration: "30 minutes", price: 150, description: "A focused session to review your situation, discuss suitable pathways, and outline next steps." },
+  fa: { title: "مشاوره پایه مهاجرت", duration: "۳۰ دقیقه", price: 150, description: "جلسه‌ای متمرکز برای بررسی شرایط شما، معرفی مسیرهای مناسب و توضیح مراحل بعدی." }
 } satisfies Record<Locale, { title: string; duration: string; price: number; description: string }>;
 
 const paymentMethods = {
   en: [
     { id: "card", title: "Credit / Debit Card", description: "Recommended for online payment after your appointment time is confirmed." },
     { id: "etransfer", title: "Interac e-Transfer", description: "Client receives payment instructions after submitting the booking request." },
-    { id: "invoice", title: "Invoice", description: "Best for corporate or employer-paid consultations." }
+    { id: "invoice", title: "Invoice", description: "Available for corporate or employer-paid consultations." }
   ],
   fa: [
     { id: "card", title: "کارت اعتباری / دبیت", description: "گزینه پیشنهادی برای پرداخت آنلاین پس از تأیید زمان جلسه." },
@@ -67,7 +67,7 @@ const copy = {
     payment: "روش پرداخت",
     total: "مبلغ",
     submit: "ارسال درخواست رزرو و لینک پرداخت",
-    secure: "مشاوره آنلاین امن",
+    secure: "مشاوره آنلاین",
     bullets: ["مشاوره خصوصی ویدئویی یا تلفنی", "بررسی شرایط و اولویت مدارک", "ارائه مراحل بعدی پس از جلسه"]
   }
 } satisfies Record<Locale, Record<string, string | string[]>>;

@@ -3,14 +3,14 @@ import { CalculatorTool } from "@/components/CalculatorTool";
 import { PageHero } from "@/components/PageHero";
 
 export const metadata: Metadata = {
-  title: "Immigration Calculator",
-  description: "Use a detailed Canadian immigration eligibility planner for early pathway assessment."
+  title: "Express Entry CRS Calculator",
+  description: "Calculate your Express Entry Comprehensive Ranking System score using the official Canada.ca CRS criteria."
 };
 
 export default function CalculatorPage() {
   return (
     <>
-      <PageHero eyebrow="Calculator" title="Explore your Canadian immigration pathway with clearer details." copy="Choose a pathway, answer practical eligibility questions, and review your score, strengths, gaps, and next steps before booking a consultation." />
+      <PageHero eyebrow="Calculator" title="Express Entry CRS Calculator" copy="Estimate your Comprehensive Ranking System score using the official Canada.ca CRS point tables." />
       <section className="section-pad bg-white">
         <div className="container-lux">
           <CalculatorTool />
